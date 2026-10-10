@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tunisia Earth Watch: methods and limits</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#f4f7f5; --card:#fff; --text:#1c2b22; --muted:#5b6b62; --brand:#0f3d2e; --warn-bg:#fff4d6; --warn:#7a5b00; --line:#d9e2dc; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1713; --card:#17221c; --text:#e6efe9; --muted:#9db0a5; --brand:#7fd1a5; --warn-bg:#3a3010; --warn:#f2d88a; --line:#2b3a31; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:860px; margin:0 auto; padding:24px 16px 64px; }
+  h1 { font-size:26px; color:var(--brand); margin:0 0 4px; }
+  h2 { font-size:19px; color:var(--brand); margin:32px 0 8px; }
+  .sub { color:var(--muted); margin:0 0 18px; }
+  .box { background:var(--warn-bg); color:var(--warn); padding:12px 14px; border-radius:10px; margin:14px 0; }
+  .card { background:var(--card); border-radius:10px; padding:12px 14px; }
+  .scroll { overflow-x:auto; }
+  table { border-collapse:collapse; width:100%; min-width:640px; font-size:13.5px; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  code { background:var(--bg); padding:1px 5px; border-radius:4px; font-size:13px; }
+  li { margin:4px 0; }
+  a { color:var(--brand); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tunisia Earth Watch: methods and limits</h1>
+  <p class="sub">Last updated 10 October 2026 · <a href="index.html">Back to the map</a></p>
+
+  <div class="box"><b>Read this first.</b> This is a demonstration tool. It is not an official warning service and has not been validated against past events. Do not use it to decide whether to evacuate, travel, plant, irrigate or spend money. For official warnings follow the Institut National de la Météorologie (INM) and the national civil protection authority. For farming advice ask your regional agriculture office (CRDA).</div>
+
+  <h2>1. What each part of the app is</h2>
+  <ul>
+    <li><b>Satellite layers</b> (vegetation, water, trend, urban, flood susceptibility, fire history) describe the past and present land surface. They are maps, not predictions.</li>
+    <li><b>Projections</b> (years 2026 to 2032 and the rainfall and irrigation sliders) are simple what-if calculations, not forecasts.</li>
+    <li><b>Live forecasts</b> (16-day rain, river flow, the heavy-rain watch and the fire-danger watch) come from weather models and change every day.</li>
+    <li><b>Watches</b> point to days and regions that deserve attention. They never say that a flood or fire will happen.</li>
+  </ul>
+
+  <h2>2. Data sources</h2>
+  <div class="card scroll">
+  <table>
+    <tr><th>Layer</th><th>Source</th><th>Period</th><th>Status</th></tr>
+    <tr><td>Vegetation (NDVI), water (NDWI)</td><td>ESA Copernicus Sentinel-2 surface reflectance, processed in Google Earth Engine, cloud-masked</td><td>2025, monthly median</td><td>Demo</td></tr>
+    <tr><td>Vegetation trend</td><td>NASA MODIS NDVI, slope per year</td><td>2010 to 2025</td><td>Demo</td></tr>
+    <tr><td>Urban (built-up share)</td><td>JRC GHSL, GHS-BUILT-S, averaged from 100 m to the map grid</td><td>2020</td><td>Demo</td></tr>
+    <tr><td>Flood susceptibility</td><td>JRC Global Surface Water (water history) with SRTM elevation and slope, worked at 240 m</td><td>Water history 1984 to 2021</td><td>Demo</td></tr>
+    <tr><td>Fire history</td><td>NASA FIRMS MODIS thermal anomalies, confidence 50 or higher, days with a detection per cell</td><td>2021 to 2025</td><td>Demo</td></tr>
+    <tr><td>Rain, temperature, wind, humidity forecasts, river discharge</td><td>Open-Meteo (weather models; river flow from its global flood model, about 5 km grid)</td><td>Live, 16 days</td><td>Demo</td></tr>
+    <tr><td>El Niño status</td><td>NOAA Climate Prediction Center, entered by hand</td><td>Issued 2026-10-08</td><td>Context only</td></tr>
+    <tr><td>Place names, base map</td><td>OpenStreetMap (Nominatim and map tiles)</td><td>Live</td><td>n/a</td></tr>
+  </table>
+  </div>
+  <p>All map layers share one grid, 400 pixels wide, about 1 km per cell. A click reads the cells inside the chosen radius.</p>
+
+  <h2>3. How the numbers are built</h2>
+  <ul>
+    <li><b>NDVI and NDWI</b> are read from the red channel of small PNG images exported from Earth Engine (NDVI from −0.2 to 0.8, NDWI from −0.6 to 0.4).</li>
+    <li><b>Water stress score (demo index)</b> = 100 × (1 − 0.8 × NDVI term − 0.2 × NDWI term), clamped to 0 to 100. Low is below 25, moderate 25 to 49, high 50 to 74, severe 75 and above. It is a relative index based on vegetation only. It is not drought, soil moisture or water supply, and it rates bare desert as stressed. It does not describe cities.</li>
+    <li><b>Projection</b> for a later year = 2025 value + trend × years. The rainfall slider multiplies NDVI by (1 + 0.5 × rainfall change) and the irrigation slider adds a small boost where vegetation is sparse. These coefficients are assumptions, not measured. The shaded band on the outlook chart widens with the square root of the years and is illustrative, not a statistical confidence interval.</li>
+    <li><b>Surface class</b> (water, urban, dense, cropland, steppe, bare) uses fixed NDVI, NDWI and built-up thresholds. The spectral curve shown is a typical reference for that class, not a measurement.</li>
+    <li><b>Flood susceptibility</b> = 50% low-lying (height above the local low point within 2 km), 30% flat ground, 20% near places where water has been seen. Permanent water is set to zero. The weights are assumptions. It shows where water would collect if heavy rain fell. It does not say how often it rains, so large flat deserts score high.</li>
+    <li><b>Fire history</b> counts days with at least one satellite fire detection per cell. It includes gas flares and crop burning, and it can miss small fires.</li>
+    <li><b>Heavy-rain watch</b> (per governorate centre): Attention if rain is 15 mm or more in a day or 30 mm or more over two days. Watch if 30 mm or more in a day or 50 mm or more over two days, or Attention in a high flood-susceptibility area. These values are demonstration values.</li>
+    <li><b>Fire-danger watch</b> counts three factors on a day: maximum temperature 35°C or more, afternoon humidity 25% or less, wind 30 km/h or more. Three factors is Watch, two is Attention. A day with 5 mm or more of rain resets to none. The level goes up one step if fires were detected nearby and down one step if the area has little vegetation (yearly mean NDVI below 0.15). It is a simplified score, not the international Fire Weather Index.</li>
+    <li><b>Confidence labels</b> on watches depend only on how far ahead the day is: higher up to 3 days, medium up to 7, low beyond. This is a rule of thumb, not a measured accuracy.</li>
+    <li><b>Suggested actions</b> in the forecast panel are generic draft text. They are not from Tunisian official guidance yet and the app says so.</li>
+  </ul>
+
+  <h2>4. Validation status</h2>
+  <div class="box">None of the scores has been tested against past floods or fires. We cannot yet say how often a Watch was followed by a real event, or how often it was a false alarm. Until that test is done and published here, treat every score as a demonstration.</div>
+
+  <h2>5. Known limits</h2>
+  <ul>
+    <li><b>No ignition or flood-date prediction.</b> Sparks and the exact rain intensity at a place cannot be forecast. Flash floods depend on local intensity, soil wetness and drainage that this app cannot see.</li>
+    <li><b>Forecasts lose skill with time.</b> Days beyond about a week are weak for a specific place.</li>
+    <li><b>River flow is coarse.</b> The model uses a 5 km grid and the nearest river cell, and many Tunisian wadis flow only after storms, so values can be missing or wrong. Flow advice appears only above a demo minimum of 5 m³/s.</li>
+    <li><b>Resolution.</b> One cell is about 1 km. Small fields, streets, wadis and small fires are not resolved.</li>
+    <li><b>Satellite gaps.</b> Cloud, sea and areas outside Tunisia have no data. The 2025 monthly values are medians and can hide short events.</li>
+    <li><b>Clicked places are approximate.</b> Names come from OpenStreetMap and may be wrong or missing. Regional watches use one point per governorate, so conditions elsewhere in the governorate can differ.</li>
+    <li><b>El Niño banner</b> is typed in by hand from NOAA and shows a warning when it is out of date. Its effect on Tunisian rain is weak and uncertain.</li>
+  </ul>
+
+  <h2>6. Licences and credits</h2>
+  <ul>
+    <li><b>Open-Meteo</b>: the free service is for non-commercial use only and needs attribution. Commercial use needs a paid plan. Confirm your category before going public.</li>
+    <li><b>OpenStreetMap</b>: the public tile and Nominatim servers have usage policies that do not allow heavy traffic. A public launch needs a proper tile provider and limited geocoding.</li>
+    <li><b>Copernicus Sentinel-2, JRC GHSL and Global Surface Water, NASA MODIS and FIRMS, NOAA, SRTM</b>: free and open, credit the providers. Check the current licence text of each before publishing.</li>
+  </ul>
+
+  <h2>7. Where to get official information</h2>
+  <ul>
+    <li>Weather warnings: Institut National de la Météorologie (INM).</li>
+    <li>Emergencies and evacuation instructions: the national civil protection authority.</li>
+    <li>Farming advice: your regional agriculture office (CRDA).</li>
+    <li>Forest-fire guidance: the national forestry authority.</li>
+  </ul>
+
+  <h2>8. Contact and corrections</h2>
+  <p>Questions or corrections:</p>
+  <ul>
+    <li>Ibtihel AGUIBI: <a href="mailto:aguibiibtihel@gmail.com">aguibiibtihel@gmail.com</a></li>
+    <li>Farah BEN ABID: <a href="mailto:farahhabid24@gmail.com">farahhabid24@gmail.com</a></li>
+  </ul>
+</main>
+</body>
+</html>

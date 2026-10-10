@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tunisia Earth Watch</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:,">
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="topbar">
+    <div class="brand" data-i18n="title"></div>
+    <select id="layerSel">
+      <option value="ndvi" data-i18n="layerNdvi"></option>
+      <option value="ndwi" data-i18n="layerNdwi"></option>
+      <option value="risk" data-i18n="layerRisk"></option>
+      <option value="trend" data-i18n="layerTrend"></option>
+      <option value="urban" data-i18n="layerUrban"></option>
+      <option value="flood" data-i18n="layerFlood"></option>
+    </select>
+    <select id="yearSel"></select>
+    <button id="playBtn">▶</button>
+    <input type="range" id="monthRange" min="1" max="12" value="4">
+    <span id="monthLbl"></span>
+    <button id="langBtn">AR</button>
+    <a href="methods.html" target="_blank" style="color:#fff;font-size:13px;white-space:nowrap">ⓘ Methods</a>
+  </div>
+
+  <div id="national" class="card">
+    <div class="ctitle" data-i18n="natTitle"></div>
+    <div class="natrow"><span data-i18n="natHigh"></span><b id="natHighV">-</b></div>
+    <div class="natrow"><span data-i18n="natNdvi"></span><b id="natNdviV">-</b></div>
+    <div class="note" data-i18n="natNote"></div>
+  </div>
+
+  <div id="legend" class="card">
+    <div id="legBar"></div>
+    <div class="legrow"><span id="legLo"></span><span id="legHi"></span></div>
+    <input type="range" id="opac" min="20" max="100" value="80">
+  </div>
+
+  <div id="loading" class="card"><span data-i18n="loading"></span> <b id="loadTxt">0/24</b></div>
+
+  <aside id="panel">
+    <div class="card" id="scenario">
+      <h4 data-i18n="scenario"></h4>
+      <label><span data-i18n="rain"></span><b id="rainV">0%</b></label>
+      <input type="range" id="rainIn" min="-40" max="40" step="5" value="0">
+      <label><span data-i18n="irr"></span><b id="irrV">0%</b></label>
+      <input type="range" id="irrIn" min="0" max="100" step="10" value="0">
+      <label><span data-i18n="radius"></span><b id="radV">5 km</b></label>
+      <input type="range" id="radIn" min="0" max="30" step="1" value="5">
+    </div>
+    <div class="card" id="enso" style="display:none"></div>
+    <div id="trendNote" class="warn" data-i18n="trendMissing" style="display:none"></div>
+
+    <div id="hint" class="hint" data-i18n="hint"></div>
+
+    <div id="content" style="display:none">
+      <div class="phead">
+        <div id="pname"></div>
+        <div id="pmeta"></div>
+        <span id="badge" class="badge"></span>
+      </div>
+      <div id="pclass"></div>
+
+      <div class="kpis">
+        <div class="kpi"><span data-i18n="ndvi"></span><b id="kNdvi">-</b></div>
+        <div class="kpi"><span data-i18n="ndwi"></span><b id="kNdwi">-</b></div>
+        <div class="kpi"><span data-i18n="riskL"></span><b id="kRisk">-</b></div>
+        <div class="kpi"><span data-i18n="trendL"></span><b id="kTrend">-</b></div>
+      </div>
+      <div class="riskbar"><div id="riskFill"></div></div>
+
+      <h4 data-i18n="chartMonthly"></h4>
+      <canvas id="cMonthly" height="170"></canvas>
+      <h4 data-i18n="fcTitle"></h4>
+      <div id="fcStatus" class="note"></div>
+      <canvas id="cFcRain" height="130"></canvas>
+      <canvas id="cFcFlow" height="130"></canvas>
+      <div id="fcRecs"></div>
+      <div class="note" data-i18n="fcNote"></div>
+
+      <h4 data-i18n="chartOutlook"></h4>
+      <canvas id="cOutlook" height="150"></canvas>
+
+      <h4 data-i18n="recs"></h4>
+      <div id="precs"></div>
+
+      <h4 data-i18n="specTitle"></h4>
+      <canvas id="cSpec" height="130"></canvas>
+      <div class="note" data-i18n="specNote"></div>
+
+      <div class="btns">
+        <button id="btnCompare"></button>
+        <button id="btnClearB" data-i18n="btnClearB"></button>
+        <button id="btnCsv" data-i18n="btnCsv"></button>
+      </div>
+      <div id="bInfo"></div>
+      <div id="sources"></div>
+      <div class="note" data-i18n="method"></div>
+    </div>
+  </aside>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+  <script src="flood.js"></script>
+  <script src="outlook.js"></script>
+  <script src="fire.js"></script>
+  <script src="firewatch.js"></script>
+</body>
+</html>

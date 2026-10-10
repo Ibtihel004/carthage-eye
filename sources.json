@@ -1,0 +1,11 @@
+{
+  "ndvi":  {"name": "Vegetation (NDVI)", "provider": "ESA Copernicus, Sentinel-2", "period": "2025 monthly median", "status": "demo"},
+  "ndwi":  {"name": "Water (NDWI)", "provider": "ESA Copernicus, Sentinel-2", "period": "2025 monthly median", "status": "demo"},
+  "trend": {"name": "Vegetation trend", "provider": "NASA MODIS", "period": "2010-2025", "status": "demo"},
+  "risk":  {"name": "Water stress", "provider": "Derived from NDVI and NDWI", "period": "2025 + scenario", "status": "demo"},
+  "urban": {"name": "Built-up surface share", "provider": "JRC GHSL (GHS-BUILT-S)", "period": "2020, 100 m averaged to ~1.2 km", "status": "demo"},
+  "flood": {"name": "Flood susceptibility", "provider": "JRC Global Surface Water, SRTM elevation and slope", "period": "1984-2021 water history, 240 m working grid", "status": "demo"},
+  "fire":  {"name": "Fire history", "provider": "NASA FIRMS (MODIS thermal anomalies) via Earth Engine", "period": "2021-2025, days with a detection per ~1 km cell", "status": "demo"},
+  "forecast_rain": {"name": "Rainfall forecast (16 days)", "provider": "Open-Meteo", "period": "live, model forecast", "status": "demo"},
+  "forecast_flow": {"name": "River discharge forecast", "provider": "Open-Meteo Flood API", "period": "live, model forecast", "status": "demo"}
+}
