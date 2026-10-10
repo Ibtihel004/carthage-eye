@@ -1,0 +1,12 @@
+{
+  "issued": "2026-10-08",
+  "next_update": "2026-11-12",
+  "status": "El Niño Advisory",
+  "nino34": 2.1,
+  "nino3": 3.0,
+  "nino12": 3.9,
+  "outlook": "Strong-to-very-strong El Niño likely through Jan–Mar 2027 (greater than 83% chance)",
+  "record_chance_ond": 83,
+  "source": "NOAA CPC ENSO Diagnostic Discussion",
+  "source_url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/ensodisc.shtml"
+}
