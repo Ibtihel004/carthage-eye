@@ -15,6 +15,7 @@
   main { max-width:860px; margin:0 auto; padding:24px 16px 64px; }
   h1 { font-size:26px; color:var(--brand); margin:0 0 4px; }
   h2 { font-size:19px; color:var(--brand); margin:32px 0 8px; }
+  h3 { font-size:15px; color:var(--brand); margin:18px 0 4px; }
   .sub { color:var(--muted); margin:0 0 18px; }
   .box { background:var(--warn-bg); color:var(--warn); padding:12px 14px; border-radius:10px; margin:14px 0; }
   .card { background:var(--card); border-radius:10px; padding:12px 14px; }
@@ -37,6 +38,7 @@
   <h2>1. What each part of the app is</h2>
   <ul>
     <li><b>Satellite layers</b> (vegetation, water, trend, urban, flood susceptibility, fire history) describe the past and present land surface. They are maps, not predictions.</li>
+    <li><b>Climate-vegetation zones</b> (machine learning) group the country by how vegetation and water change through the year. They are a map of 2025, not a prediction.</li>
     <li><b>Projections</b> (years 2026 to 2032 and the rainfall and irrigation sliders) are simple what-if calculations, not forecasts.</li>
     <li><b>Live forecasts</b> (16-day rain, river flow, the heavy-rain watch and the fire-danger watch) come from weather models and change every day.</li>
     <li><b>Watches</b> point to days and regions that deserve attention. They never say that a flood or fire will happen.</li>
@@ -47,6 +49,7 @@
   <table>
     <tr><th>Layer</th><th>Source</th><th>Period</th><th>Status</th></tr>
     <tr><td>Vegetation (NDVI), water (NDWI)</td><td>ESA Copernicus Sentinel-2 surface reflectance, processed in Google Earth Engine, cloud-masked</td><td>2025, monthly median</td><td>Demo</td></tr>
+    <tr><td>Climate-vegetation zones</td><td>Computed in the browser by k-means clustering from the NDVI and NDWI monthly grids above</td><td>2025</td><td>Demo</td></tr>
     <tr><td>Vegetation trend</td><td>NASA MODIS NDVI, slope per year</td><td>2010 to 2025</td><td>Demo</td></tr>
     <tr><td>Urban (built-up share)</td><td>JRC GHSL, GHS-BUILT-S, averaged from 100 m to the map grid</td><td>2020</td><td>Demo</td></tr>
     <tr><td>Flood susceptibility</td><td>JRC Global Surface Water (water history) with SRTM elevation and slope, worked at 240 m</td><td>Water history 1984 to 2021</td><td>Demo</td></tr>
@@ -72,10 +75,31 @@
     <li><b>Suggested actions</b> in the forecast panel are generic draft text. They are not from Tunisian official guidance yet and the app says so.</li>
   </ul>
 
-  <h2>4. Validation status</h2>
-  <div class="box">None of the scores has been tested against past floods or fires. We cannot yet say how often a Watch was followed by a real event, or how often it was a false alarm. Until that test is done and published here, treat every score as a demonstration.</div>
+  <h2>4. Machine learning: climate-vegetation zones</h2>
+  <p>The zones layer groups the country by how vegetation and water change through the year. It uses k-means clustering, an unsupervised method, so no labelled training data is involved.</p>
 
-  <h2>5. Known limits</h2>
+  <h3>Method</h3>
+  <p>Each pixel on the 1 km grid gets a fingerprint of 24 numbers: its NDVI for each of the 12 months of 2025, followed by its NDWI for each month (the same Sentinel-2 monthly medians used elsewhere in the app). K-means (k-means++ initialisation, fixed random seed so results are repeatable, 4 to 8 zones, 6 by default) groups pixels with similar curves. It is trained on a sample of every fourth pixel in each direction, then every valid pixel is assigned to its nearest zone. Pixels with fewer than 9 clear months are skipped, and missing months in the remaining pixels are filled with that pixel's own mean. The calculation runs in the browser (<code>kmeans.js</code>) on the same PNG grids as the rest of the app.</p>
+
+  <h3>How the zones are named</h3>
+  <p>The algorithm only finds groups. The names, such as "Dense vegetation or forest", "Steppe and rangeland" or "Desert and bare soil", are added afterwards by simple thresholds on each zone's average NDVI and NDWI. They are an interpretation, not a model output. When two zones fall into the same name, the second is shown with "(2)".</p>
+
+  <h3>Limits of the zones</h3>
+  <ul>
+    <li>This is not a validated land-cover map. There are no reference labels, so there is no accuracy figure.</li>
+    <li>It describes one year (2025) of monthly composites, not a long-term climate.</li>
+    <li>At 1 km, small features such as sebkhas, chotts or oases can be absorbed into larger zones.</li>
+    <li>Results change with the number of zones chosen.</li>
+    <li>Informal check: the zones follow the expected north-to-south pattern (humid north, steppe in the centre, desert in the south). This is a visual sense-check, not a validation.</li>
+  </ul>
+
+  <h3>Relation to hyperspectral data</h3>
+  <p>The prototype uses multispectral Sentinel-2 data. The same per-pixel fingerprint approach can take the 200+ bands of hyperspectral sources such as EnMAP, PRISMA or EMIT. These sensors are not used yet.</p>
+
+  <h2>5. Validation status</h2>
+  <div class="box">None of the scores has been tested against past floods or fires. We cannot yet say how often a Watch was followed by a real event, or how often it was a false alarm. The machine-learning zones have no reference labels and no accuracy figure. Until that testing is done and published here, treat every score and every zone as a demonstration.</div>
+
+  <h2>6. Known limits</h2>
   <ul>
     <li><b>No ignition or flood-date prediction.</b> Sparks and the exact rain intensity at a place cannot be forecast. Flash floods depend on local intensity, soil wetness and drainage that this app cannot see.</li>
     <li><b>Forecasts lose skill with time.</b> Days beyond about a week are weak for a specific place.</li>
@@ -84,16 +108,17 @@
     <li><b>Satellite gaps.</b> Cloud, sea and areas outside Tunisia have no data. The 2025 monthly values are medians and can hide short events.</li>
     <li><b>Clicked places are approximate.</b> Names come from OpenStreetMap and may be wrong or missing. Regional watches use one point per governorate, so conditions elsewhere in the governorate can differ.</li>
     <li><b>El Niño banner</b> is typed in by hand from NOAA and shows a warning when it is out of date. Its effect on Tunisian rain is weak and uncertain.</li>
+    <li><b>Climate-vegetation zones</b> describe 2025 only, are unvalidated, and can absorb small features (see section 4).</li>
   </ul>
 
-  <h2>6. Licences and credits</h2>
+  <h2>7. Licences and credits</h2>
   <ul>
     <li><b>Open-Meteo</b>: the free service is for non-commercial use only and needs attribution. Commercial use needs a paid plan. Confirm your category before going public.</li>
     <li><b>OpenStreetMap</b>: the public tile and Nominatim servers have usage policies that do not allow heavy traffic. A public launch needs a proper tile provider and limited geocoding.</li>
     <li><b>Copernicus Sentinel-2, JRC GHSL and Global Surface Water, NASA MODIS and FIRMS, NOAA, SRTM</b>: free and open, credit the providers. Check the current licence text of each before publishing.</li>
   </ul>
 
-  <h2>7. Where to get official information</h2>
+  <h2>8. Where to get official information</h2>
   <ul>
     <li>Weather warnings: Institut National de la Météorologie (INM).</li>
     <li>Emergencies and evacuation instructions: the national civil protection authority.</li>
@@ -101,7 +126,7 @@
     <li>Forest-fire guidance: the national forestry authority.</li>
   </ul>
 
-  <h2>8. Contact and corrections</h2>
+  <h2>9. Contact and corrections</h2>
   <p>Questions or corrections:</p>
   <ul>
     <li>Ibtihel AGUIBI: <a href="mailto:aguibiibtihel@gmail.com">aguibiibtihel@gmail.com</a></li>
