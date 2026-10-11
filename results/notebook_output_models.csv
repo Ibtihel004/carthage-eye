@@ -1,0 +1,5 @@
+model,auc,brier,share_of_fires_in_top10pct_days
+version 1 rule (rates from test years),0.54,0.0551,0.14
+day of year only,0.625,0.0547,0.13
+governorate + day of year,0.77,0.0513,0.43
+governorate + weather + day of year (version 2),0.798,0.0489,0.46
