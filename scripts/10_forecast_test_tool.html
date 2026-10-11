@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forecast lead-time test tool</title>
+<style>
+  body { font: 15px/1.5 system-ui, Segoe UI, Roboto, sans-serif; max-width: 720px; margin: 24px auto; padding: 0 14px; color: #1c2b22; }
+  h1 { font-size: 22px; color: #0f3d2e; }
+  button { border: 0; background: #0f3d2e; color: #fff; border-radius: 8px; padding: 10px 16px; font-size: 15px; cursor: pointer; margin: 4px 6px 4px 0; }
+  button:disabled { background: #9aa8a0; cursor: default; }
+  #bar { height: 14px; background: #e0e6e2; border-radius: 7px; overflow: hidden; margin: 12px 0; }
+  #fill { height: 100%; width: 0; background: #2e7d32; }
+  #log { font: 12px/1.4 Consolas, monospace; background: #f4f7f5; border-radius: 8px; padding: 10px; height: 220px; overflow: auto; white-space: pre-wrap; }
+  .note { color: #5b6b62; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Forecast lead-time test tool</h1>
+<p class="note">Test tool only. It is not part of the app. It downloads archived Open-Meteo forecasts (1 to 7 days ahead) for 11 northern governorates, May to September 2024 and 2025, and saves them in one CSV file. Source: Open-Meteo Previous Runs API (non-commercial use).</p>
+<button id="go">Start (about 5 to 10 minutes)</button>
+<button id="dl" disabled>Download CSV</button>
+<div id="bar"><div id="fill"></div></div>
+<div id="status">Ready.</div>
+<div id="log"></div>
+
+<script>
+var GOVS = [
+  ['Ariana', 36.86, 10.19], ['Beja', 36.73, 9.18], ['Ben Arous', 36.75, 10.23], ['Bizerte', 37.27, 9.87],
+  ['Jendouba', 36.50, 8.78], ['Le Kef', 36.17, 8.71], ['Manouba', 36.81, 10.09], ['Nabeul', 36.45, 10.73],
+  ['Siliana', 36.08, 9.37], ['Tunis', 36.80, 10.18], ['Zaghouan', 36.40, 10.14]
+];
+var LEADS = [1, 2, 3, 4, 5, 6, 7];
+var VARS = ['temperature_2m', 'dewpoint_2m', 'precipitation', 'wind_speed_10m', 'wind_direction_10m'];
+var MONTHS = [];
+[2024, 2025].forEach(function (y) { for (var m = 5; m <= 9; m++) MONTHS.push([y, m]); });
+
+var rows = [];   // [gov, date, lead, tmax, dew, rain, wind, rain_lead1]
+function $(id) { return document.getElementById(id); }
+function log(s) { var l = $('log'); l.textContent += s + '\n'; l.scrollTop = l.scrollHeight; }
+function p2(n) { return (n < 10 ? '0' : '') + n; }
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function lastDay(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+
+function buildUrl(g, y, m) {
+  var names = [];
+  LEADS.forEach(function (L) { VARS.forEach(function (v) { names.push(v + '_previous_day' + L); }); });
+  return 'https://previous-runs-api.open-meteo.com/v1/forecast?latitude=' + g[1] + '&longitude=' + g[2] +
+    '&hourly=' + names.join(',') +
+    '&start_date=' + y + '-' + p2(m) + '-01&end_date=' + y + '-' + p2(m) + '-' + p2(lastDay(y, m)) +
+    '&timezone=Africa%2FTunis';
+}
+
+// turn one hourly response into daily rows (pure function, no network)
+function dailyFromHourly(govName, h) {
+  var out = [], byLead1 = {};
+  var days = {};
+  h.time.forEach(function (t, i) { var d = t.slice(0, 10); (days[d] = days[d] || []).push(i); });
+  var dates = Object.keys(days).sort();
+  var tmp = {};
+  LEADS.forEach(function (L) {
+    var T = h['temperature_2m_previous_day' + L], Dp = h['dewpoint_2m_previous_day' + L],
+        P = h['precipitation_previous_day' + L], S = h['wind_speed_10m_previous_day' + L],
+        R = h['wind_direction_10m_previous_day' + L];
+    if (!T || !Dp || !P || !S || !R) return;
+    dates.forEach(function (d) {
+      var idx = days[d], tmax = -1e9, sd = 0, nd = 0, rain = 0, nr = 0, su = 0, sv = 0, nw = 0;
+      idx.forEach(function (i) {
+        if (T[i] !== null && T[i] !== undefined && T[i] > tmax) tmax = T[i];
+        if (Dp[i] !== null && Dp[i] !== undefined) { sd += Dp[i]; nd++; }
+        if (P[i] !== null && P[i] !== undefined) { rain += P[i]; nr++; }
+        if (S[i] !== null && S[i] !== undefined && R[i] !== null && R[i] !== undefined) {
+          var a = R[i] * Math.PI / 180;
+          su += -S[i] * Math.sin(a); sv += -S[i] * Math.cos(a); nw++;
+        }
+      });
+      var ok = idx.length >= 20 && nd >= 20 && nr >= 20 && nw >= 20 && tmax > -1e8;
+      var rec = ok ? {tmax: tmax, dew: sd / nd, rain: rain, wind: Math.sqrt(Math.pow(su / nw, 2) + Math.pow(sv / nw, 2))} : null;
+      tmp[L + '|' + d] = rec;
+    });
+  });
+  dates.forEach(function (d) {
+    var r1 = tmp['1|' + d];
+    LEADS.forEach(function (L) {
+      var r = tmp[L + '|' + d];
+      if (!r) return;
+      out.push([govName, d, L, r.tmax.toFixed(2), r.dew.toFixed(2), r.rain.toFixed(2), r.wind.toFixed(2),
+                r1 ? r1.rain.toFixed(2) : '']);
+    });
+  });
+  return out;
+}
+
+async function getOne(url) {
+  for (var attempt = 0; attempt < 5; attempt++) {
+    var r;
+    try { r = await fetch(url); } catch (e) { log('network error, retry ' + (attempt + 1)); await sleep(5000); continue; }
+    if (r.status === 429) { log('rate limit, waiting 65 s'); await sleep(65000); continue; }
+    if (!r.ok) { var txt = ''; try { txt = await r.text(); } catch (e) {} throw new Error('HTTP ' + r.status + ' ' + txt.slice(0, 200)); }
+    return r.json();
+  }
+  throw new Error('too many failed attempts');
+}
+
+function csvText() {
+  return ['gov,date,lead,tmax,dew,rain,wind,rain_lead1'].concat(rows.map(function (r) { return r.join(','); })).join('\n');
+}
+function download() {
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csvText()], {type: 'text/csv'}));
+  a.download = 'forecast_leadtime_2024_2025.csv';
+  a.click();
+}
+
+async function run() {
+  $('go').disabled = true; rows = [];
+  var total = GOVS.length * MONTHS.length, done = 0, failed = 0;
+  for (var gi = 0; gi < GOVS.length; gi++) {
+    for (var mi = 0; mi < MONTHS.length; mi++) {
+      var g = GOVS[gi], ym = MONTHS[mi];
+      $('status').textContent = g[0] + ' ' + ym[0] + '-' + p2(ym[1]) + '  (' + (done + 1) + '/' + total + ')';
+      try {
+        var d = await getOne(buildUrl(g, ym[0], ym[1]));
+        if (!d.hourly) throw new Error('no hourly data in the answer');
+        var add = dailyFromHourly(g[0], d.hourly);
+        rows = rows.concat(add);
+        if (!add.length) log('no usable data: ' + g[0] + ' ' + ym[0] + '-' + p2(ym[1]));
+      } catch (e) {
+        failed++; log('FAILED ' + g[0] + ' ' + ym[0] + '-' + p2(ym[1]) + ': ' + e.message);
+        if (failed >= 3 && rows.length === 0) { log('Stopping: the first requests all failed. Send a screenshot of this window.'); $('status').textContent = 'Stopped.'; $('go').disabled = false; return; }
+      }
+      done++; $('fill').style.width = Math.round(100 * done / total) + '%';
+      $('dl').disabled = rows.length === 0;
+      await sleep(500);
+    }
+  }
+  $('status').textContent = 'Finished. ' + rows.length + ' rows, ' + failed + ' failed requests. Click "Download CSV", then send me the file.';
+  log('Finished: ' + rows.length + ' rows, ' + failed + ' failed requests.');
+  $('go').disabled = false;
+}
+$('go').onclick = run;
+$('dl').onclick = download;
+if (typeof module !== 'undefined') module.exports = {dailyFromHourly: dailyFromHourly, buildUrl: buildUrl};
+</script>
+</body>
+</html>
