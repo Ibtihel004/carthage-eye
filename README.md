@@ -31,7 +31,8 @@ It never claims to predict a flood or a fire. It shows susceptibility, history a
 |---|---|---|
 | Climate-vegetation zones | vs ESA WorldCover, 167,952 pixels | purity 75% (NDVI-only baseline 73%), NMI 0.37 (0.35), ARI 0.42 (0.20) |
 | Fire-danger watch (version 1, in the app) | weather rule vs NASA FIRMS, 11 northern governorates, Jun-Sep 2021-2025, 6,710 governorate-days | fire on 9.4% of flagged days vs 5.4% of others (ratio 1.75). Catches 20% of fire days, 91% of flags had none. Weak |
-| Fire-day probability model (version 2, back-test only, **not in the app**) | trained 2003-2020, tested 2021-2025 | AUC 0.80 vs 0.54 for version 1. 46% of fires fall on the 10% highest-rated days. Most skill comes from governorate and time of summer, weather adds a smaller part. Not tested with real forecasts |
+| Fire-day probability model (version 2, back-test only, **not in the app**) | trained 2003-2020, tested 2021-2025 | AUC 0.80 vs 0.54 for version 1. 46% of fires fall on the 10% highest-rated days. Most skill comes from governorate and time of summer, weather adds a smaller part. Weather adds little beyond location and season |
+| Fire model version 2 with real forecasts (1 to 7 days ahead, Open-Meteo archive, summers 2024-2025) | scored on archived forecasts | no measurable gain over a governorate + day-of-year model at 1 to 6 days, worse at 7 days. **Not used in the app** |
 | Heavy-rain watch, flood susceptibility, water-stress score | none | untested, demo only |
 
 Details, tables and limits: `methods.html`, section 5. Raw results: `results/`.
@@ -59,7 +60,7 @@ firewatch.js               regional fire-danger watch (version 1 rule)
 kmeans.js                  climate-vegetation zones and the WorldCover check
 methods.html               methods, data sources, validation and limits
 data/                      PNG grids (400 px wide, about 1 km per cell) and JSON files
-scripts/                   Earth Engine scripts 01-08 and the Python model script 09
+scripts/                   Earth Engine scripts 01-08, Python model scripts 09 and 11, forecast download tool 10
 results/                   back-test outputs and the fire training table
 ```
 
@@ -80,7 +81,7 @@ results/                   back-test outputs and the fire training table
 
 ## Regenerating the data and results
 
-Run the scripts `01` to `08` in `scripts/` in the Google Earth Engine Code Editor, click each printed link and save the image or table into `data/` or `results/` under the name shown. `01` and `02` are reconstructions of the original scripts. They use the same encoding the app decodes. Then run `python scripts/09_fire_model_v2.py` (needs pandas, numpy, scikit-learn) to rebuild the version 2 results.
+Run the scripts `01` to `08` in `scripts/` in the Google Earth Engine Code Editor, click each printed link and save the image or table into `data/` or `results/` under the name shown. `01` and `02` are reconstructions of the original scripts. They use the same encoding the app decodes. Then run `python scripts/09_fire_model_v2.py` (needs pandas, numpy, scikit-learn) to rebuild the version 2 results. For the forecast test, open `scripts/10_forecast_test_tool.html` with a local server, download the CSV, save it as `results/forecast_leadtime_2024_2025.csv`, then run `python scripts/11_fire_model_v2_leadtime.py`.
 
 ## Limits
 
