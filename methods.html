@@ -31,9 +31,9 @@
 <body>
 <main>
   <h1>Tunisia Earth Watch: methods and limits</h1>
-  <p class="sub">Last updated 10 October 2026 · <a href="index.html">Back to the map</a></p>
+  <p class="sub">Last updated 11 October 2026 · <a href="index.html">Back to the map</a></p>
 
-  <div class="box"><b>Read this first.</b> This is a demonstration tool. It is not an official warning service and has not been validated against past events. Do not use it to decide whether to evacuate, travel, plant, irrigate or spend money. For official warnings follow the Institut National de la Météorologie (INM) and the national civil protection authority. For farming advice ask your regional agriculture office (CRDA).</div>
+  <div class="box"><b>Read this first.</b> This is a demonstration tool. It is not an official warning service and has only been tested in part against past events (section 5). Do not use it to decide whether to evacuate, travel, plant, irrigate or spend money. For official warnings follow the Institut National de la Météorologie (INM) and the national civil protection authority. For farming advice ask your regional agriculture office (CRDA).</div>
 
   <h2>1. What each part of the app is</h2>
   <ul>
@@ -50,10 +50,12 @@
     <tr><th>Layer</th><th>Source</th><th>Period</th><th>Status</th></tr>
     <tr><td>Vegetation (NDVI), water (NDWI)</td><td>ESA Copernicus Sentinel-2 surface reflectance, processed in Google Earth Engine, cloud-masked</td><td>2025, monthly median</td><td>Demo</td></tr>
     <tr><td>Climate-vegetation zones</td><td>Computed in the browser by k-means clustering from the NDVI and NDWI monthly grids above</td><td>2025</td><td>Demo</td></tr>
+    <tr><td>Zone check</td><td>ESA WorldCover v200, used only to check the zones</td><td>2021</td><td>Reference</td></tr>
     <tr><td>Vegetation trend</td><td>NASA MODIS NDVI, slope per year</td><td>2010 to 2025</td><td>Demo</td></tr>
     <tr><td>Urban (built-up share)</td><td>JRC GHSL, GHS-BUILT-S, averaged from 100 m to the map grid</td><td>2020</td><td>Demo</td></tr>
     <tr><td>Flood susceptibility</td><td>JRC Global Surface Water (water history) with SRTM elevation and slope, worked at 240 m</td><td>Water history 1984 to 2021</td><td>Demo</td></tr>
     <tr><td>Fire history</td><td>NASA FIRMS MODIS thermal anomalies, confidence 50 or higher, days with a detection per cell</td><td>2021 to 2025</td><td>Demo</td></tr>
+    <tr><td>Fire back-test weather</td><td>ECMWF ERA5-Land daily reanalysis, used only for the back-test in section 5</td><td>June to September, 2021 to 2025</td><td>Back-test only</td></tr>
     <tr><td>Rain, temperature, wind, humidity forecasts, river discharge</td><td>Open-Meteo (weather models; river flow from its global flood model, about 5 km grid)</td><td>Live, 16 days</td><td>Demo</td></tr>
     <tr><td>El Niño status</td><td>NOAA Climate Prediction Center, entered by hand</td><td>Issued 2026-10-08</td><td>Context only</td></tr>
     <tr><td>Place names, base map</td><td>OpenStreetMap (Nominatim and map tiles)</td><td>Live</td><td>n/a</td></tr>
@@ -70,7 +72,7 @@
     <li><b>Flood susceptibility</b> = 50% low-lying (height above the local low point within 2 km), 30% flat ground, 20% near places where water has been seen. Permanent water is set to zero. The weights are assumptions. It shows where water would collect if heavy rain fell. It does not say how often it rains, so large flat deserts score high.</li>
     <li><b>Fire history</b> counts days with at least one satellite fire detection per cell. It includes gas flares and crop burning, and it can miss small fires.</li>
     <li><b>Heavy-rain watch</b> (per governorate centre): Attention if rain is 15 mm or more in a day or 30 mm or more over two days. Watch if 30 mm or more in a day or 50 mm or more over two days, or Attention in a high flood-susceptibility area. These values are demonstration values.</li>
-    <li><b>Fire-danger watch</b> counts three factors on a day: maximum temperature 35°C or more, afternoon humidity 25% or less, wind 30 km/h or more. Three factors is Watch, two is Attention. A day with 5 mm or more of rain resets to none. The level goes up one step if fires were detected nearby and down one step if the area has little vegetation (yearly mean NDVI below 0.15). It is a simplified score, not the international Fire Weather Index.</li>
+    <li><b>Fire-danger watch</b> counts three factors on a day: maximum temperature 35°C or more, afternoon humidity 25% or less, wind 30 km/h or more. Three factors is Watch, two is Attention. A day with 5 mm or more of rain resets to none. The level goes up one step if fires were detected nearby and down one step if the area has little vegetation (yearly mean NDVI below 0.15). It is a simplified score, not the international Fire Weather Index. Its weather part was back-tested in section 5, with weak results.</li>
     <li><b>Confidence labels</b> on watches depend only on how far ahead the day is: higher up to 3 days, medium up to 7, low beyond. This is a rule of thumb, not a measured accuracy.</li>
     <li><b>Suggested actions</b> in the forecast panel are generic draft text. They are not from Tunisian official guidance yet and the app says so.</li>
   </ul>
@@ -113,12 +115,35 @@
   <p>The prototype uses multispectral Sentinel-2 data. The same per-pixel fingerprint approach can take the 200+ bands of hyperspectral sources such as EnMAP, PRISMA or EMIT. These sensors are not used yet.</p>
 
   <h2>5. Validation status</h2>
-  <div class="box">The scores have been tested only in part. <b>Machine-learning zones:</b> compared with ESA WorldCover (2021) on the 1 km grid (about 168,000 pixels), the zones reach a purity of 75%, a normalised mutual information of 0.37 and an adjusted Rand index of 0.42. A baseline that splits pixels by mean yearly NDVI alone scores 73%, 0.35 and 0.20, so the zones add only a modest amount beyond vegetation level. WorldCover is itself a model product, so this shows agreement with another map, not accuracy on the ground. <b>Fire-danger watch, heavy-rain watch, flood susceptibility and the water-stress score:</b> not tested against past events. We cannot yet say how often a Watch was followed by a real event, or how often it was a false alarm. Treat them as demonstrations.</div>
+  <div class="box">The scores have been tested only in part. <b>Machine-learning zones:</b> compared with ESA WorldCover (2021), the zones reach a purity of 75% and a normalised mutual information of 0.37, against 73% and 0.35 for an NDVI-only baseline, so they add only a modest amount beyond vegetation level. <b>Fire-danger watch (weather rule only, without wind):</b> tested on 6,710 governorate-days in the northern governorates, June to September 2021 to 2025, against NASA FIRMS fire detections. Fire was detected on 9.4% of flagged days and 5.4% of other days (1.75 times as often). The rule caught 20% of the days with a detection and 91% of flagged days had none, and the result changed a lot from year to year. Treat it as weak. <b>Heavy-rain watch, flood susceptibility and the water-stress score:</b> not tested against past events. Treat them as demonstrations.</div>
+
+  <h3>Fire-danger rule: back-test</h3>
+  <p>We tested the weather part of the rule (maximum temperature 35°C or more, humidity 25% or less, rain under 5 mm) on every day from 1 June to 30 September, 2021 to 2025, in the 11 governorates whose centre lies north of 36°N (6,710 governorate-days). A fire counts when NASA FIRMS records at least one detection (confidence 50 or higher) in the same governorate on the same day. Weather is ERA5-Land daily reanalysis. The northern governorates were chosen to avoid the gas flares of the south. The script is <code>scripts/07_fire_backtest.js</code> and the counts are in <code>results/fire_backtest_2021_2025.csv</code>.</p>
+  <div class="card scroll">
+  <table>
+    <tr><th>Year</th><th>Flagged days</th><th>Fire detected on flagged days</th><th>Fire detected on other days</th><th>Ratio</th></tr>
+    <tr><td>2021</td><td>216</td><td>34 of 216 (15.7%)</td><td>59 of 1,126 (5.2%)</td><td>3.00</td></tr>
+    <tr><td>2022</td><td>212</td><td>23 of 212 (10.8%)</td><td>91 of 1,130 (8.1%)</td><td>1.35</td></tr>
+    <tr><td>2023</td><td>182</td><td>12 of 182 (6.6%)</td><td>37 of 1,160 (3.2%)</td><td>2.07</td></tr>
+    <tr><td>2024</td><td>150</td><td>5 of 150 (3.3%)</td><td>52 of 1,192 (4.4%)</td><td>0.76</td></tr>
+    <tr><td>2025</td><td>80</td><td>5 of 80 (6.3%)</td><td>76 of 1,262 (6.0%)</td><td>1.04</td></tr>
+    <tr><td><b>All years</b></td><td><b>840</b></td><td><b>79 of 840 (9.4%)</b></td><td><b>315 of 5,870 (5.4%)</b></td><td><b>1.75</b></td></tr>
+  </table>
+  </div>
+  <p>The ratio is how often a fire was detected on flagged days divided by how often on other days (1 means no better than chance).</p>
+  <ul>
+    <li>Flagged days had a detection about 1.75 times as often as other days. A simple 95% interval is 1.4 to 2.2, but it ignores the link between neighbouring days and governorates, so it is too narrow.</li>
+    <li>The rule is better than chance overall but weak. It caught 20% of the days with a detection, 91% of flagged days had none, and the ratio ranged from 3.00 (2021) to 0.76 (2024).</li>
+    <li>A governorate counts as having a fire if there is a detection anywhere inside it, so larger governorates have a higher chance by size alone.</li>
+    <li>Not tested: the wind factor (ERA5-Land has no daily maximum wind), the adjustments for nearby fire history and low vegetation, and forecast skill, because reanalysis weather was used instead of the Open-Meteo forecast. Humidity was estimated from the daily-mean dewpoint and the daily-maximum temperature, which is an approximation. The app's full rule is therefore not exactly what was tested.</li>
+    <li>FIRMS detections include crop and stubble burning, which can happen on cooler days. Same-day comparison only: no lead time was tested.</li>
+  </ul>
 
   <h2>6. Known limits</h2>
   <ul>
     <li><b>No ignition or flood-date prediction.</b> Sparks and the exact rain intensity at a place cannot be forecast. Flash floods depend on local intensity, soil wetness and drainage that this app cannot see.</li>
     <li><b>Forecasts lose skill with time.</b> Days beyond about a week are weak for a specific place.</li>
+    <li><b>Fire-danger watch has weak skill.</b> In the back-test its weather rule beat chance overall but missed 80% of days with a detection and was right on fewer than 1 flagged day in 10 (section 5).</li>
     <li><b>River flow is coarse.</b> The model uses a 5 km grid and the nearest river cell, and many Tunisian wadis flow only after storms, so values can be missing or wrong. Flow advice appears only above a demo minimum of 5 m³/s.</li>
     <li><b>Resolution.</b> One cell is about 1 km. Small fields, streets, wadis and small fires are not resolved.</li>
     <li><b>Satellite gaps.</b> Cloud, sea and areas outside Tunisia have no data. The 2025 monthly values are medians and can hide short events.</li>
@@ -131,7 +156,7 @@
   <ul>
     <li><b>Open-Meteo</b>: the free service is for non-commercial use only and needs attribution. Commercial use needs a paid plan. Confirm your category before going public.</li>
     <li><b>OpenStreetMap</b>: the public tile and Nominatim servers have usage policies that do not allow heavy traffic. A public launch needs a proper tile provider and limited geocoding.</li>
-    <li><b>Copernicus Sentinel-2, JRC GHSL and Global Surface Water, NASA MODIS and FIRMS, NOAA, SRTM</b>: free and open, credit the providers. Check the current licence text of each before publishing.</li>
+    <li><b>Copernicus Sentinel-2, ESA WorldCover, JRC GHSL and Global Surface Water, NASA MODIS and FIRMS, ECMWF ERA5-Land, NOAA, SRTM</b>: free and open, credit the providers. Check the current licence text of each before publishing.</li>
   </ul>
 
   <h2>8. Where to get official information</h2>
