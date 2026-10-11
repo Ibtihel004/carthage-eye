@@ -84,9 +84,25 @@
   <h3>How the zones are named</h3>
   <p>The algorithm only finds groups. The names, such as "Dense vegetation or forest", "Steppe and rangeland" or "Desert and bare soil", are added afterwards by simple thresholds on each zone's average NDVI and NDWI. They are an interpretation, not a model output. When two zones fall into the same name, the second is shown with "(2)".</p>
 
+  <h3>Check against ESA WorldCover</h3>
+  <p>The zones were compared with ESA WorldCover (2021), a satellite land-cover map, on the 1 km grid with 6 zones (about 168,000 pixels). The WorldCover class codes were exported from Earth Engine as <code>data/worldcover.png</code>, and the comparison runs in the browser after you click "Find zones".</p>
+  <div class="card scroll">
+  <table>
+    <tr><th>Measure</th><th>K-means zones</th><th>NDVI-only baseline</th></tr>
+    <tr><td>Purity</td><td>75%</td><td>73%</td></tr>
+    <tr><td>Normalised mutual information</td><td>0.37</td><td>0.35</td></tr>
+    <tr><td>Adjusted Rand index</td><td>0.42</td><td>0.20</td></tr>
+  </table>
+  </div>
+  <ul>
+    <li>The baseline cuts pixels into the same number of equal-sized groups by mean yearly NDVI only. About two thirds of Tunisia is desert, so equal-sized groups split the desert artificially, which makes the Rand index gap look larger than the real benefit. On purity and mutual information the zones are only about two points better.</li>
+    <li>Zone names agree with WorldCover for 87% of pixels, but the list of WorldCover classes counted as agreeing with each name is fixed in the code and is generous. One zone, "Steppe and rangeland", is 47% cropland in WorldCover, so that name fits poorly. The names come from simple thresholds, not from the model.</li>
+    <li>WorldCover is itself a satellite-derived map, not field data. Neighbouring pixels are not independent, so the figures are descriptive.</li>
+  </ul>
+
   <h3>Limits of the zones</h3>
   <ul>
-    <li>This is not a validated land-cover map. There are no reference labels, so there is no accuracy figure.</li>
+    <li>This is not a validated land-cover map. No labels were used to build it, and the comparison with WorldCover above shows modest agreement, not accuracy on the ground.</li>
     <li>It describes one year (2025) of monthly composites, not a long-term climate.</li>
     <li>At 1 km, small features such as sebkhas, chotts or oases can be absorbed into larger zones.</li>
     <li>Results change with the number of zones chosen.</li>
@@ -97,7 +113,7 @@
   <p>The prototype uses multispectral Sentinel-2 data. The same per-pixel fingerprint approach can take the 200+ bands of hyperspectral sources such as EnMAP, PRISMA or EMIT. These sensors are not used yet.</p>
 
   <h2>5. Validation status</h2>
-  <div class="box">None of the scores has been tested against past floods or fires. We cannot yet say how often a Watch was followed by a real event, or how often it was a false alarm. The machine-learning zones have no reference labels and no accuracy figure. Until that testing is done and published here, treat every score and every zone as a demonstration.</div>
+  <div class="box">The scores have been tested only in part. <b>Machine-learning zones:</b> compared with ESA WorldCover (2021) on the 1 km grid (about 168,000 pixels), the zones reach a purity of 75%, a normalised mutual information of 0.37 and an adjusted Rand index of 0.42. A baseline that splits pixels by mean yearly NDVI alone scores 73%, 0.35 and 0.20, so the zones add only a modest amount beyond vegetation level. WorldCover is itself a model product, so this shows agreement with another map, not accuracy on the ground. <b>Fire-danger watch, heavy-rain watch, flood susceptibility and the water-stress score:</b> not tested against past events. We cannot yet say how often a Watch was followed by a real event, or how often it was a false alarm. Treat them as demonstrations.</div>
 
   <h2>6. Known limits</h2>
   <ul>
@@ -108,7 +124,7 @@
     <li><b>Satellite gaps.</b> Cloud, sea and areas outside Tunisia have no data. The 2025 monthly values are medians and can hide short events.</li>
     <li><b>Clicked places are approximate.</b> Names come from OpenStreetMap and may be wrong or missing. Regional watches use one point per governorate, so conditions elsewhere in the governorate can differ.</li>
     <li><b>El Niño banner</b> is typed in by hand from NOAA and shows a warning when it is out of date. Its effect on Tunisian rain is weak and uncertain.</li>
-    <li><b>Climate-vegetation zones</b> describe 2025 only, are unvalidated, and can absorb small features (see section 4).</li>
+    <li><b>Climate-vegetation zones</b> describe 2025 only, agree only modestly with WorldCover (only slightly better than an NDVI-only split), and can absorb small features (see section 4).</li>
   </ul>
 
   <h2>7. Licences and credits</h2>
